@@ -8,8 +8,8 @@ imbalances, etc.), NÃO multiplicadores que distorcem o volume.
 O frontend recebe o volume real + metadados de cada engine.
 """
 from typing import List, Dict, Any, Optional
-from volume_engines.base import VolumeEngine
 from volume_engines import (
+    VolumeEngine,
     TickVelocityEngine,
     SpreadWeightEngine,
     MicroClusterEngine,

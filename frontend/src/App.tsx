@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 // ==========================================
 // TIPOS
@@ -289,7 +289,7 @@ function reprocessClusters(ticks: Tick[], threshold: number, priceStep: number =
         (currentCluster.compositeSignalAvg * (n - 1) + (tick.composite_signal || 0)) / n;
 
       // Agrupar por nível discreto de preço
-      const existingLevel = currentCluster.priceLevels.find(l => l.price === discretePrice);
+      const existingLevel = currentCluster.priceLevels.find((l: PriceLevel) => l.price === discretePrice);
       if (existingLevel) {
         existingLevel.volumeTotal += vol;
         if (tick.side === 'buy') existingLevel.volumeBuy += vol;
@@ -303,7 +303,7 @@ function reprocessClusters(ticks: Tick[], threshold: number, priceStep: number =
         });
       }
 
-      const maxLevel = currentCluster.priceLevels.reduce((max, l) => 
+      const maxLevel = currentCluster.priceLevels.reduce((max: PriceLevel, l: PriceLevel) => 
         l.volumeTotal > max.volumeTotal ? l : max
       , currentCluster.priceLevels[0]);
       currentCluster.poc = maxLevel.price;
@@ -327,6 +327,18 @@ function reprocessClusters(ticks: Tick[], threshold: number, priceStep: number =
 // ==========================================
 // GRÁFICO PROFISSIONAL
 // ==========================================
+
+interface ViewState {
+  offsetX: number;
+  offsetY: number;
+  scaleX: number;
+  scaleY: number;
+  isDragging: boolean;
+  isZooming: boolean;
+  lastX: number;
+  lastY: number;
+  dragMode: 'pan' | 'zoom' | 'moveDrawing';
+}
 
 function ProfessionalChart({
   clusters,
@@ -357,9 +369,9 @@ function ProfessionalChart({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const preset = SYMBOLS.find(s => s.name === symbol) || SYMBOLS[0];
+  const preset = SYMBOLS.find((s: typeof SYMBOLS[0]) => s.name === symbol) || SYMBOLS[0];
 
-  const [viewState, setViewState] = useState({
+  const [viewState, setViewState] = useState<ViewState>({
     offsetX: 0,
     offsetY: 0,
     scaleX: 1,
@@ -368,7 +380,7 @@ function ProfessionalChart({
     isZooming: false,
     lastX: 0,
     lastY: 0,
-    dragMode: 'pan' as 'pan' | 'zoom' | 'moveDrawing',
+    dragMode: 'pan',
   });
 
   const [crosshair, setCrosshair] = useState({ x: 0, y: 0, visible: false });
@@ -388,7 +400,7 @@ function ProfessionalChart({
     }
 
     let high = -Infinity, low = Infinity;
-    clusters.forEach(c => {
+    clusters.forEach((c: ClusterData) => {
       high = Math.max(high, c.high);
       low = Math.min(low, c.low);
     });
@@ -421,14 +433,14 @@ function ProfessionalChart({
     return Math.floor((x - viewState.offsetX) / (clusterWidth + config.clusterGap));
   }, [viewState.offsetX, clusterWidth, config.clusterGap]);
 
-  const visibleClusters = useMemo(() => {
+  const visibleClusters = useMemo((): { clusters: ClusterData[]; startIdx: number } => {
     const totalWidth = clusterWidth + config.clusterGap;
     const startIdx = Math.max(0, Math.floor(-viewState.offsetX / totalWidth) - 1);
     const count = Math.ceil(chartWidth / totalWidth) + 3;
     return { clusters: clusters.slice(startIdx, startIdx + count), startIdx };
   }, [clusters, viewState.offsetX, clusterWidth, config.clusterGap, chartWidth]);
 
-  const maxVolume = useMemo(() => Math.max(...clusters.map(c => c.volumeTotal), 1), [clusters]);
+  const maxVolume = useMemo(() => Math.max(...clusters.map((c: ClusterData) => c.volumeTotal), 1), [clusters]);
 
   // ==========================================
   // RENDERIZAÇÃO
@@ -491,7 +503,7 @@ function ProfessionalChart({
     }
 
     // Desenhos do usuário
-    drawings.forEach(d => {
+    drawings.forEach((d: Drawing) => {
       const isSelected = d.id === selectedDrawing;
       ctx.strokeStyle = d.color;
       ctx.lineWidth = isSelected ? 2.5 : 1.5;
@@ -574,7 +586,7 @@ function ProfessionalChart({
     // CLUSTERS
     // ==========================================
 
-    visibleClusters.clusters.forEach((cluster, i) => {
+    visibleClusters.clusters.forEach((cluster: ClusterData, i: number) => {
       const globalIdx = visibleClusters.startIdx + i;
       const centerX = clusterToX(globalIdx);
       const x = centerX - clusterWidth / 2;
@@ -652,11 +664,11 @@ function ProfessionalChart({
 
         // Volume Profile Interno - Modo HYBRID e RAW
         if (cluster.priceLevels.length > 0) {
-          const maxLevelVol = Math.max(...cluster.priceLevels.map(l => l.volumeTotal));
+          const maxLevelVol = Math.max(...cluster.priceLevels.map((l: PriceLevel) => l.volumeTotal));
           const opacity = Math.round((config.histogramOpacity / 100) * 255).toString(16).padStart(2, '0');
           const barWidth = viewMode === 'raw' ? 0.85 : 0.6;
 
-          cluster.priceLevels.forEach(level => {
+          cluster.priceLevels.forEach((level: PriceLevel) => {
             const y = priceToY(level.price);
             const barW = (level.volumeTotal / maxLevelVol) * w * barWidth;
             
@@ -849,7 +861,7 @@ function ProfessionalChart({
       ctx.fillText('VOL', 3, histY + 11);
       ctx.fillText('BODY/WICK', 3, histY + barHeight + gap + 11);
 
-      visibleClusters.clusters.forEach((cluster, i) => {
+      visibleClusters.clusters.forEach((cluster: ClusterData, i: number) => {
         const globalIdx = visibleClusters.startIdx + i;
         const centerX = clusterToX(globalIdx);
         const x = centerX - clusterWidth / 2;
@@ -937,7 +949,7 @@ function ProfessionalChart({
 
     ctx.fillStyle = config.text;
     ctx.font = '10px monospace';
-    ctx.fillText(`Clusters: ${clusters.filter(c => c.isClosed).length} | Δ Th: ${threshold} | Step: ${priceStep.toFixed(preset.digits)} | Zoom: ${(viewState.scaleX * 100).toFixed(0)}%`, 10, 30);
+    ctx.fillText(`Clusters: ${clusters.filter((c: ClusterData) => c.isClosed).length} | Δ Th: ${threshold} | Step: ${priceStep.toFixed(preset.digits)} | Zoom: ${(viewState.scaleX * 100).toFixed(0)}%`, 10, 30);
 
     // Engine legend (top right)
     ctx.fillStyle = config.bgPanel + 'dd';
@@ -962,7 +974,7 @@ function ProfessionalChart({
       ctx.strokeRect(mmX, mmY, mmW, mmH);
 
       const mmScale = mmW / clusters.length;
-      clusters.forEach((c, i) => {
+      clusters.forEach((c: ClusterData, i: number) => {
         const mx = mmX + i * mmScale;
         ctx.fillStyle = (c.close >= c.open ? config.bull : config.bear) + '88';
         ctx.fillRect(mx, mmY + 2, Math.max(1, mmScale), mmH - 4);
@@ -1057,7 +1069,7 @@ function ProfessionalChart({
     setCrosshair({ x: Math.min(x, chartWidth), y, visible: true });
 
     if (viewState.isDragging && viewState.dragMode === 'moveDrawing' && selectedDrawing) {
-      const drawing = drawings.find(d => d.id === selectedDrawing);
+      const drawing = drawings.find((d: Drawing) => d.id === selectedDrawing);
       if (drawing && drawing.type === 'hline') {
         const newPrice = yToPrice(y);
         onUpdateDrawing({ ...drawing, p1: { ...drawing.p1, y: newPrice } });
@@ -1256,7 +1268,7 @@ export default function App() {
   const [showConfig, setShowConfig] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const preset = SYMBOLS.find(s => s.name === symbol) || SYMBOLS[0];
+  const preset = SYMBOLS.find((s: typeof SYMBOLS[0]) => s.name === symbol) || SYMBOLS[0];
 
   const handleConfigChange = (key: keyof ChartConfig, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -1366,7 +1378,7 @@ export default function App() {
     setClusters([]);
     setTicks(0);
     setPriceStep(0); // Reset priceStep para AUTO ao trocar de ativo
-    const p = SYMBOLS.find(s => s.name === sym);
+    const p = SYMBOLS.find((s: typeof SYMBOLS[0]) => s.name === sym);
     if (p) setThreshold(p.deltaThreshold);
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ action: 'switch_symbol', symbol: sym }));
@@ -1380,7 +1392,7 @@ export default function App() {
     setTicks(0);
   };
 
-  const currentCluster = clusters.find(c => !c.isClosed);
+  const currentCluster = clusters.find((c: ClusterData) => !c.isClosed);
   const current_symbol_label = preset.label;
 
   return (
