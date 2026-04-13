@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HotelSys &mdash; Sistema de Hospedaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0f1117;--bg-panel:#161b27;--bg-card:#1a2035;--bg-input:#111827;
+  --border:#1e293b;--border-active:#334155;--text:#94a3b8;--text-strong:#e2e8f0;--text-dim:#475569;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;--orange:#f97316;
+  --accent:#4f7dff;--accent-hover:#6b93ff;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+.header-logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{font-size:24px;}
+.logo-text{font-size:18px;font-weight:700;color:var(--text-strong);}
+.logo-sub{font-size:11px;color:var(--accent);font-weight:500;}
+.header-clock{font-size:13px;color:var(--text-dim);}
+.nav{display:flex;gap:2px;padding:8px 20px 0;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.nav-tab{padding:8px 16px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.main{flex:1;overflow-y:auto;padding:20px;}
+.section{display:none;}
+.section.active{display:block;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;}
+.stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.stat-value{font-size:26px;font-weight:700;color:var(--text-strong);}
+.stat-sub{font-size:11px;color:var(--text-dim);}
+.stat-card.green{border-color:#22c55e33;}.stat-card.green .stat-value{color:var(--green);}
+.stat-card.blue{border-color:#3b82f633;}.stat-card.blue .stat-value{color:var(--blue);}
+.stat-card.yellow{border-color:#f59e0b33;}.stat-card.yellow .stat-value{color:var(--yellow);}
+.stat-card.red{border-color:#ef444433;}.stat-card.red .stat-value{color:var(--red);}
+.stat-card.purple{border-color:#8b5cf633;}.stat-card.purple .stat-value{color:var(--purple);}
+.section-title{font-size:16px;font-weight:600;color:var(--text-strong);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.room-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.filter-btn:hover,.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.room-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;position:relative;}
+.room-card:hover{border-color:var(--border-active);transform:translateY(-2px);}
+.room-number{font-size:22px;font-weight:700;color:var(--text-strong);margin-bottom:4px;}
+.room-type-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.room-status{display:inline-block;margin-top:8px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+.status-disponivel{background:#22c55e22;color:var(--green);}
+.status-ocupado{background:#ef444422;color:var(--red);}
+.status-reservado{background:#f59e0b22;color:var(--yellow);}
+.status-manutencao{background:#8b5cf622;color:var(--purple);}
+.room-price{position:absolute;top:10px;right:10px;font-size:11px;color:var(--accent);font-weight:600;}
+.room-guest{font-size:11px;color:var(--text-dim);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
+.modal{background:var(--bg-panel);border:1px solid var(--border-active);border-radius:14px;padding:24px;width:min(480px,95vw);max-height:90vh;overflow-y:auto;animation:fadeIn .2s ease;}
+.modal-wide{width:min(640px,95vw);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.modal-title{font-size:16px;font-weight:600;color:var(--text-strong);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.modal-close{margin-left:auto;background:transparent;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:5px;font-weight:500;}
+.form-input,.form-select{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text-strong);font-size:13px;font-family:inherit;outline:none;transition:border .2s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-select option{background:var(--bg-panel);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.btn{padding:9px 18px;border-radius:7px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-hover);}
+.btn-success{background:#22c55e;color:#fff;}.btn-success:hover{background:#16a34a;}
+.btn-danger{background:var(--red);color:#fff;}.btn-danger:hover{background:#dc2626;}
+.btn-warning{background:var(--yellow);color:#000;}.btn-warning:hover{background:#d97706;}
+.btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border);}.btn-ghost:hover{color:var(--text);border-color:var(--border-active);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;}
+.btn-group{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);background:var(--bg-card);text-align:left;white-space:nowrap;}
+td{padding:10px 14px;font-size:13px;border-top:1px solid var(--border);color:var(--text);}
+tr:hover td{background:var(--bg-card);}
+.td-strong{color:var(--text-strong);font-weight:500;}
+.store-layout{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
+@media(max-width:768px){.store-layout{grid-template-columns:1fr;}}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.product-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;text-align:center;}
+.product-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.product-card.out-of-stock{opacity:.5;cursor:not-allowed;}.product-card.out-of-stock:hover{transform:none;border-color:var(--border);}
+.product-emoji{font-size:28px;margin-bottom:6px;}
+.product-name{font-size:12px;font-weight:500;color:var(--text-strong);margin-bottom:3px;}
+.product-price{font-size:13px;font-weight:700;color:var(--accent);}
+.product-stock{font-size:11px;color:var(--text-dim);margin-top:3px;}
+.category-title{font-size:13px;font-weight:600;color:var(--text-strong);margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.cart-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;height:fit-content;position:sticky;top:0;}
+.cart-title{font-size:14px;font-weight:600;color:var(--text-strong);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.cart-empty{color:var(--text-dim);font-size:13px;text-align:center;padding:20px 0;}
+.cart-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.cart-item-name{flex:1;color:var(--text);}
+.cart-item-qty{display:flex;align-items:center;gap:4px;}
+.qty-btn{width:20px;height:20px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.qty-btn:hover{border-color:var(--accent);}
+.cart-item-total{color:var(--accent);font-weight:600;min-width:50px;text-align:right;}
+.cart-total{margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:700;color:var(--text-strong);font-size:14px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;}
+.badge-green{background:#22c55e22;color:var(--green);}
+.badge-red{background:#ef444422;color:var(--red);}
+.badge-yellow{background:#f59e0b22;color:var(--yellow);}
+.badge-blue{background:#3b82f622;color:var(--blue);}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;z-index:9999;animation:slideUp .3s ease;max-width:320px;}
+.toast-success{background:#22c55e;}.toast-error{background:var(--red);}.toast-info{background:var(--accent);}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:20px;}
+.report-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.report-card-title{font-size:13px;font-weight:600;color:var(--text-strong);margin-bottom:12px;}
+.bar-chart{display:flex;flex-direction:column;gap:8px;}
+.bar-item{display:flex;align-items:center;gap:8px;font-size:12px;}
+.bar-label{width:80px;color:var(--text-dim);text-align:right;flex-shrink:0;}
+.bar-wrap{flex:1;background:var(--bg-input);border-radius:4px;height:10px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.bar-val{width:70px;color:var(--text);flex-shrink:0;}
+.activity-list{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.dot-green{background:var(--green);}.dot-red{background:var(--red);}.dot-blue{background:var(--blue);}.dot-yellow{background:var(--yellow);}
+.activity-text{color:var(--text);}
+.activity-time{color:var(--text-dim);margin-left:auto;white-space:nowrap;padding-left:8px;}
+.room-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.detail-item{background:var(--bg-input);border-radius:7px;padding:10px;}
+.detail-item-label{font-size:11px;color:var(--text-dim);margin-bottom:3px;}
+.detail-item-value{font-size:14px;color:var(--text-strong);font-weight:500;}
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-input{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:8px 11px 8px 34px;color:var(--text-strong);font-size:13px;font-family:inherit;outline:none;}
+.search-input:focus{border-color:var(--accent);}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:14px;pointer-events:none;}
+.empty-state{text-align:center;padding:40px;color:var(--text-dim);}
+.empty-state-icon{font-size:40px;margin-bottom:8px;}
+.empty-state-text{font-size:14px;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:700px){.dash-grid{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-active);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-icon">&#127976;</div>
+    <div>
+      <div class="logo-text">HotelSys</div>
+      <div class="logo-sub">Sistema de Hospedaria</div>
+    </div>
+  </div>
+  <div class="header-clock" id="clock">--:--:--</div>
+</header>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="showSection('dashboard')">&#127968; Dashboard</button>
+  <button class="nav-tab" onclick="showSection('quartos')">&#128719; Quartos</button>
+  <button class="nav-tab" onclick="showSection('hospedes')">&#128101; H&oacute;spedes</button>
+  <button class="nav-tab" onclick="showSection('conveniencia')">&#128722; Conveni&ecirc;ncia</button>
+  <button class="nav-tab" onclick="showSection('relatorios')">&#128202; Relat&oacute;rios</button>
+</nav>
+
+<main class="main">
+
+<section class="section active" id="sec-dashboard">
+  <div class="stat-grid" id="dash-stats"></div>
+  <div class="dash-grid">
+    <div>
+      <div class="section-title">&#128203; Atividade Recente</div>
+      <div class="activity-list" id="activity-list"></div>
+    </div>
+    <div>
+      <div class="section-title">&#128719; Status dos Quartos</div>
+      <div class="report-card" style="margin-bottom:12px;"><div class="bar-chart" id="room-status-chart"></div></div>
+      <div class="section-title">&#128197; Checkouts Hoje</div>
+      <div id="todays-checkouts"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sec-quartos">
+  <div class="section-title">
+    &#128719; Gerenciamento de Quartos
+    <button class="btn btn-primary btn-sm" onclick="openAddRoomModal()">+ Adicionar Quarto</button>
+  </div>
+  <div class="room-filters">
+    <button class="filter-btn active" onclick="filterRooms(event,'todos')">Todos</button>
+    <button class="filter-btn" onclick="filterRooms(event,'disponivel')">&#9989; Dispon&iacute;veis</button>
+    <button class="filter-btn" onclick="filterRooms(event,'ocupado')">&#128308; Ocupados</button>
+    <button class="filter-btn" onclick="filterRooms(event,'reservado')">&#127937; Reservados</button>
+    <button class="filter-btn" onclick="filterRooms(event,'manutencao')">&#128295; Manuten&ccedil;&atilde;o</button>
+    <button class="filter-btn" onclick="filterRooms(event,'solteiro')">&#128719; Solteiro</button>
+    <button class="filter-btn" onclick="filterRooms(event,'casal')">&#128719; Casal</button>
+    <button class="filter-btn" onclick="filterRooms(event,'triplo')">&#128719; Triplo</button>
+  </div>
+  <div class="room-grid" id="room-grid"></div>
+</section>
+
+<section class="section" id="sec-hospedes">
+  <div class="section-title">
+    &#128101; H&oacute;spedes
+    <button class="btn btn-primary btn-sm" onclick="openCheckinModal()">+ Check-in</button>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">&#128269;</span>
+    <input class="search-input" type="text" id="guest-search" placeholder="Buscar por nome, quarto ou CPF..." oninput="renderGuests()">
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>H&oacute;spede</th><th>Quarto</th><th>Tipo</th><th>Check-in</th>
+        <th>Check-out</th><th>Di&aacute;rias</th><th>Valor</th><th>A&ccedil;&otilde;es</th>
+      </tr></thead>
+      <tbody id="guests-tbody"></tbody>
+    </table>
+  </div>
+  <div class="empty-state" id="guests-empty" style="display:none;">
+    <div class="empty-state-icon">&#128101;</div>
+    <div class="empty-state-text">Nenhum h&oacute;spede encontrado</div>
+  </div>
+</section>
+
+<section class="section" id="sec-conveniencia">
+  <div class="section-title">
+    &#128722; Conveni&ecirc;ncia &mdash; Loja do Hotel
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="openManageProductsModal()">&#9881;&#65039; Gerenciar Produtos</button>
+      <button class="btn btn-ghost btn-sm" onclick="openOrderHistoryModal()">&#128203; Hist&oacute;rico de Pedidos</button>
+    </div>
+  </div>
+  <div class="store-layout">
+    <div id="store-catalog"></div>
+    <div>
+      <div class="cart-panel">
+        <div class="cart-title">&#128722; Carrinho
+          <span id="cart-count" style="background:var(--accent);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;margin-left:auto;">0</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quarto / H&oacute;spede</label>
+          <select class="form-select" id="cart-room-select"><option value="">&mdash; Selecione o quarto &mdash;</option></select>
+        </div>
+        <div id="cart-items"><div class="cart-empty">Carrinho vazio</div></div>
+        <div class="cart-total" id="cart-total-row" style="display:none;">
+          <span>Total:</span><span id="cart-total-value">R$ 0,00</span>
+        </div>
+        <button class="btn btn-success btn-full" style="margin-top:12px;" onclick="checkoutCart()">&#9989; Finalizar Pedido</button>
+        <button class="btn btn-ghost btn-full" style="margin-top:6px;" onclick="clearCart()">&#128465; Limpar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sec-relatorios">
+  <div class="section-title">&#128202; Relat&oacute;rios</div>
+  <div class="stat-grid" id="report-stats"></div>
+  <div class="report-grid">
+    <div class="report-card">
+      <div class="report-card-title">&#128719; Ocupa&ccedil;&atilde;o por Tipo de Quarto</div>
+      <div class="bar-chart" id="report-occupancy-type"></div>
+    </div>
+    <div class="report-card">
+      <div class="report-card-title">&#127851; Vendas da Conveni&ecirc;ncia por Categoria</div>
+      <div class="bar-chart" id="report-store-category"></div>
+    </div>
+    <div class="report-card">
+      <div class="report-card-title">&#128176; Receita por Tipo de Quarto</div>
+      <div class="bar-chart" id="report-revenue-type"></div>
+    </div>
+    <div class="report-card">
+      <div class="report-card-title">&#127942; Produtos Mais Vendidos</div>
+      <div class="bar-chart" id="report-top-products"></div>
+    </div>
+  </div>
+  <div class="section-title">&#128203; Hist&oacute;rico de Estadias</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>H&oacute;spede</th><th>Quarto</th><th>Tipo</th><th>Check-in</th>
+        <th>Check-out</th><th>Di&aacute;rias</th><th>Hospedagem</th><th>Conveni&ecirc;ncia</th><th>Total</th>
+      </tr></thead>
+      <tbody id="history-tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<!-- MODAL: Room Detail -->
+<div class="modal-overlay" id="modal-room" style="display:none;" onclick="closeModalOnOverlay(event,'modal-room')">
+  <div class="modal">
+    <div class="modal-title"><span id="modal-room-title">Quarto</span><button class="modal-close" onclick="closeModal('modal-room')">&times;</button></div>
+    <div id="modal-room-content"></div>
+  </div>
+</div>
+
+<!-- MODAL: Add Room -->
+<div class="modal-overlay" id="modal-add-room" style="display:none;" onclick="closeModalOnOverlay(event,'modal-add-room')">
+  <div class="modal">
+    <div class="modal-title">&#10133; Adicionar Quarto<button class="modal-close" onclick="closeModal('modal-add-room')">&times;</button></div>
+    <form onsubmit="submitAddRoom(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">N&uacute;mero do Quarto *</label>
+          <input class="form-input" id="add-room-number" type="text" placeholder="Ex: 101" required maxlength="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Andar</label>
+          <input class="form-input" id="add-room-floor" type="number" value="1" min="1" max="50">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo de Quarto *</label>
+        <select class="form-select" id="add-room-type" required onchange="updateRoomPrice()">
+          <option value="">&mdash; Selecione &mdash;</option>
+          <option value="solteiro">&#128719; Solteiro (1 cama de solteiro)</option>
+          <option value="casal">&#128719; Casal (1 cama de casal)</option>
+          <option value="triplo">&#128719; Triplo (3 camas)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pre&ccedil;o por Di&aacute;ria (R$) *</label>
+        <input class="form-input" id="add-room-price" type="number" step="0.01" min="1" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Comodidades (separadas por v&iacute;rgula)</label>
+        <input class="form-input" id="add-room-amenities" type="text" placeholder="Ex: Wi-Fi, TV, Frigobar, Ar-condicionado">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status Inicial</label>
+        <select class="form-select" id="add-room-status">
+          <option value="disponivel">&#9989; Dispon&iacute;vel</option>
+          <option value="manutencao">&#128295; Manuten&ccedil;&atilde;o</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" type="submit">&#9989; Salvar Quarto</button>
+        <button class="btn btn-ghost" type="button" onclick="closeModal('modal-add-room')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Check-in -->
+<div class="modal-overlay" id="modal-checkin" style="display:none;" onclick="closeModalOnOverlay(event,'modal-checkin')">
+  <div class="modal modal-wide">
+    <div class="modal-title">&#9989; Check-in de H&oacute;spede<button class="modal-close" onclick="closeModal('modal-checkin')">&times;</button></div>
+    <form onsubmit="submitCheckin(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome Completo *</label>
+          <input class="form-input" id="ci-name" type="text" placeholder="Nome do h&oacute;spede" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF</label>
+          <input class="form-input" id="ci-cpf" type="text" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input class="form-input" id="ci-phone" type="text" placeholder="(00) 00000-0000" maxlength="15" oninput="maskPhone(this)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="ci-email" type="email" placeholder="email@exemplo.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quarto *</label>
+        <select class="form-select" id="ci-room" required onchange="updateCheckinTotal()">
+          <option value="">&mdash; Selecione o quarto dispon&iacute;vel &mdash;</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data de Check-in *</label>
+          <input class="form-input" id="ci-checkin" type="date" required onchange="updateCheckinTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de Check-out *</label>
+          <input class="form-input" id="ci-checkout" type="date" required onchange="updateCheckinTotal()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observa&ccedil;&otilde;es</label>
+        <input class="form-input" id="ci-notes" type="text" placeholder="Observa&ccedil;&otilde;es especiais...">
+      </div>
+      <div id="ci-total-preview" style="display:none;background:var(--bg-input);border-radius:7px;padding:12px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+          <span style="color:var(--text-dim);">Quarto:</span><span id="ci-room-label" style="color:var(--text);"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+          <span style="color:var(--text-dim);">Di&aacute;rias:</span><span id="ci-nights" style="color:var(--text);"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;">
+          <span style="color:var(--text-dim);">Total Estimado:</span><span id="ci-total" style="color:var(--accent);"></span>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-success" type="submit">&#9989; Confirmar Check-in</button>
+        <button class="btn btn-ghost" type="button" onclick="closeModal('modal-checkin')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Checkout -->
+<div class="modal-overlay" id="modal-checkout" style="display:none;" onclick="closeModalOnOverlay(event,'modal-checkout')">
+  <div class="modal">
+    <div class="modal-title">&#128682; Check-out<button class="modal-close" onclick="closeModal('modal-checkout')">&times;</button></div>
+    <div id="modal-checkout-content"></div>
+  </div>
+</div>
+
+<!-- MODAL: Manage Products -->
+<div class="modal-overlay" id="modal-products" style="display:none;" onclick="closeModalOnOverlay(event,'modal-products')">
+  <div class="modal modal-wide">
+    <div class="modal-title">&#9881;&#65039; Gerenciar Produtos<button class="modal-close" onclick="closeModal('modal-products')">&times;</button></div>
+    <div class="btn-group" style="margin-bottom:14px;margin-top:0;">
+      <button class="btn btn-primary btn-sm" onclick="openAddProductForm()">+ Novo Produto</button>
+    </div>
+    <div id="add-product-form" style="display:none;background:var(--bg-input);border-radius:8px;padding:14px;margin-bottom:14px;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome *</label>
+          <input class="form-input" id="prod-name" type="text" placeholder="Nome do produto">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emoji</label>
+          <input class="form-input" id="prod-emoji" type="text" placeholder="&#127851;" maxlength="4">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Categoria *</label>
+          <select class="form-select" id="prod-category">
+            <option value="bebidas">&#129379; Bebidas</option>
+            <option value="bolachas">&#127850; Bolachas &amp; Doces</option>
+            <option value="salgados">&#129384; Salgados &amp; Snacks</option>
+            <option value="higiene">&#129396; Higiene</option>
+            <option value="outros">&#128230; Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pre&ccedil;o (R$) *</label>
+          <input class="form-input" id="prod-price" type="number" step="0.01" min="0.01" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estoque Inicial</label>
+        <input class="form-input" id="prod-stock" type="number" min="0" placeholder="0">
+      </div>
+      <div class="btn-group" style="margin-top:10px;">
+        <button class="btn btn-primary btn-sm" onclick="submitAddProduct()">Salvar</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-product-form').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Produto</th><th>Categoria</th><th>Pre&ccedil;o</th><th>Estoque</th><th>A&ccedil;&otilde;es</th></tr></thead>
+        <tbody id="products-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Order History -->
+<div class="modal-overlay" id="modal-orders" style="display:none;" onclick="closeModalOnOverlay(event,'modal-orders')">
+  <div class="modal modal-wide">
+    <div class="modal-title">&#128203; Hist&oacute;rico de Pedidos<button class="modal-close" onclick="closeModal('modal-orders')">&times;</button></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data/Hora</th><th>Quarto</th><th>H&oacute;spede</th><th>Itens</th><th>Total</th></tr></thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEYS={rooms:'hs_rooms',guests:'hs_guests',products:'hs_products',orders:'hs_orders',history:'hs_history',activity:'hs_activity'};
+function load(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function uid(){return Math.random().toString(36).slice(2,11)+Date.now().toString(36);}
+function fmtMoney(v){return'R$ '+Number(v).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function fmtDate(s){if(!s)return'&mdash;';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function today(){return new Date().toISOString().slice(0,10);}
+function diffDays(a,b){return Math.max(1,Math.round((new Date(b)-new Date(a))/86400000));}
+function fmtDT(iso){if(!iso)return'&mdash;';var d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function typeLabel(t){return{solteiro:'Solteiro',casal:'Casal',triplo:'Triplo'}[t]||t;}
+function statusLabel(s){return{disponivel:'Dispon&iacute;vel',ocupado:'Ocupado',reservado:'Reservado',manutencao:'Manuten&ccedil;&atilde;o'}[s]||s;}
+function catLabel(c){return{bebidas:'&#129379; Bebidas',bolachas:'&#127850; Bolachas &amp; Doces',salgados:'&#129384; Salgados &amp; Snacks',higiene:'&#129396; Higiene',outros:'&#128230; Outros'}[c]||c;}
+function addActivity(text,type){var a=load(KEYS.activity)||[];a.unshift({text:text,type:type||'blue',time:new Date().toISOString()});if(a.length>50)a.length=50;save(KEYS.activity,a);}
+function showToast(msg,type){var t=document.createElement('div');t.className='toast toast-'+(type||'success');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove();},3500);}
+
+function initData(){
+  if(!load(KEYS.rooms)){
+    save(KEYS.rooms,[
+      {id:1,number:'101',floor:1,type:'solteiro',status:'disponivel',price:89.90,amenities:['Wi-Fi','TV','Ventilador'],currentGuest:null},
+      {id:2,number:'102',floor:1,type:'solteiro',status:'disponivel',price:89.90,amenities:['Wi-Fi','TV','Ventilador'],currentGuest:null},
+      {id:3,number:'103',floor:1,type:'casal',status:'disponivel',price:149.90,amenities:['Wi-Fi','TV','Ar-condicionado','Frigobar'],currentGuest:null},
+      {id:4,number:'104',floor:1,type:'casal',status:'disponivel',price:149.90,amenities:['Wi-Fi','TV','Ar-condicionado','Frigobar'],currentGuest:null},
+      {id:5,number:'105',floor:1,type:'triplo',status:'disponivel',price:199.90,amenities:['Wi-Fi','TV','Ar-condicionado','Frigobar','Banheiro Privativo'],currentGuest:null},
+      {id:6,number:'201',floor:2,type:'solteiro',status:'disponivel',price:89.90,amenities:['Wi-Fi','TV','Ventilador'],currentGuest:null},
+      {id:7,number:'202',floor:2,type:'casal',status:'disponivel',price:159.90,amenities:['Wi-Fi','TV','Ar-condicionado','Frigobar','Vista Jardim'],currentGuest:null},
+      {id:8,number:'203',floor:2,type:'triplo',status:'disponivel',price:209.90,amenities:['Wi-Fi','TV','Ar-condicionado','Frigobar','Banheiro Privativo'],currentGuest:null},
+      {id:9,number:'204',floor:2,type:'casal',status:'manutencao',price:159.90,amenities:['Wi-Fi','TV','Ar-condicionado'],currentGuest:null},
+      {id:10,number:'301',floor:3,type:'solteiro',status:'disponivel',price:99.90,amenities:['Wi-Fi','TV','Ar-condicionado'],currentGuest:null},
+      {id:11,number:'302',floor:3,type:'casal',status:'disponivel',price:169.90,amenities:['Wi-Fi','TV','Ar-condicionado','Frigobar','Banheira'],currentGuest:null},
+      {id:12,number:'303',floor:3,type:'triplo',status:'disponivel',price:219.90,amenities:['Wi-Fi','TV','Ar-condicionado','Frigobar','Banheira','Vista Panor&acirc;mica'],currentGuest:null}
+    ]);
+  }
+  if(!load(KEYS.guests))save(KEYS.guests,[]);
+  if(!load(KEYS.products)){
+    save(KEYS.products,[
+      {id:'p1',name:'&Aacute;gua Mineral 500ml',emoji:'&#128167;',category:'bebidas',price:3.50,stock:50},
+      {id:'p2',name:'&Aacute;gua com G&aacute;s 500ml',emoji:'&#128167;',category:'bebidas',price:4.00,stock:30},
+      {id:'p3',name:'Refrigerante Lata',emoji:'&#129380;',category:'bebidas',price:5.50,stock:40},
+      {id:'p4',name:'Suco de Caixinha',emoji:'&#129411;',category:'bebidas',price:4.50,stock:35},
+      {id:'p5',name:'Cerveja Long Neck',emoji:'&#127866;',category:'bebidas',price:8.00,stock:60},
+      {id:'p6',name:'Energ&eacute;tico',emoji:'&#9889;',category:'bebidas',price:9.00,stock:20},
+      {id:'p7',name:'Caf&eacute; Sol&uacute;vel',emoji:'&#9749;',category:'bebidas',price:5.00,stock:25},
+      {id:'p8',name:'Achocolatado',emoji:'&#127851;',category:'bebidas',price:4.50,stock:30},
+      {id:'p9',name:'Bolacha Recheada',emoji:'&#127850;',category:'bolachas',price:4.00,stock:40},
+      {id:'p10',name:'Biscoito Salgado',emoji:'&#129384;',category:'bolachas',price:3.50,stock:35},
+      {id:'p11',name:'Wafer de Chocolate',emoji:'&#127851;',category:'bolachas',price:4.50,stock:30},
+      {id:'p12',name:'Balas e Gomas',emoji:'&#127852;',category:'bolachas',price:3.00,stock:50},
+      {id:'p13',name:'Barra de Cereal',emoji:'&#127806;',category:'bolachas',price:5.00,stock:25},
+      {id:'p14',name:'Chocolate ao Leite',emoji:'&#127851;',category:'bolachas',price:7.00,stock:20},
+      {id:'p15',name:'Batata Chips',emoji:'&#129364;',category:'salgados',price:5.50,stock:30},
+      {id:'p16',name:'Amendoim Torrado',emoji:'&#129372;',category:'salgados',price:4.00,stock:25},
+      {id:'p17',name:'Salgadinho de Milho',emoji:'&#127757;',category:'salgados',price:5.00,stock:30},
+      {id:'p18',name:'Pipoca Microondas',emoji:'&#127871;',category:'salgados',price:6.00,stock:20},
+      {id:'p19',name:'Sabonete',emoji:'&#129692;',category:'higiene',price:4.50,stock:30},
+      {id:'p20',name:'Shampoo Individual',emoji:'&#129396;',category:'higiene',price:6.00,stock:25},
+      {id:'p21',name:'Escova + Pasta Dental',emoji:'&#129463;',category:'higiene',price:8.00,stock:20},
+      {id:'p22',name:'Protetor Solar 50+',emoji:'&#9728;',category:'higiene',price:15.00,stock:15},
+      {id:'p23',name:'Pilhas AA (2un)',emoji:'&#128267;',category:'outros',price:7.00,stock:20},
+      {id:'p24',name:'Adaptador de Tomada',emoji:'&#128268;',category:'outros',price:10.00,stock:10}
+    ]);
+  }
+  if(!load(KEYS.orders))save(KEYS.orders,[]);
+  if(!load(KEYS.history))save(KEYS.history,[]);
+  if(!load(KEYS.activity))save(KEYS.activity,[]);
+}
+
+function showSection(name){
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('sec-'+name).classList.add('active');
+  var idx={dashboard:0,quartos:1,hospedes:2,conveniencia:3,relatorios:4}[name];
+  if(idx!==undefined)document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if(name==='dashboard')renderDashboard();
+  if(name==='quartos')renderRooms();
+  if(name==='hospedes')renderGuests();
+  if(name==='conveniencia'){renderStore();renderCartRoomSelect();}
+  if(name==='relatorios')renderReports();
+}
+
+function updateClock(){
+  var n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleDateString('pt-BR')+'  '+n.toLocaleTimeString('pt-BR');
+}
+
+function renderDashboard(){
+  var rooms=load(KEYS.rooms)||[];
+  var guests=load(KEYS.guests)||[];
+  var orders=load(KEYS.orders)||[];
+  var history=load(KEYS.history)||[];
+  var occupied=rooms.filter(function(r){return r.status==='ocupado';}).length;
+  var available=rooms.filter(function(r){return r.status==='disponivel';}).length;
+  var reserved=rooms.filter(function(r){return r.status==='reservado';}).length;
+  var maintenance=rooms.filter(function(r){return r.status==='manutencao';}).length;
+  var storeRev=orders.reduce(function(s,o){return s+o.total;},0);
+  var roomRev=history.reduce(function(s,h){return s+(h.roomTotal||0);},0);
+  var td=today();
+  var coToday=guests.filter(function(g){return g.checkoutDate===td;}).length;
+  document.getElementById('dash-stats').innerHTML=
+    '<div class="stat-card green"><div class="stat-label">Quartos Dispon&iacute;veis</div><div class="stat-value">'+available+'</div><div class="stat-sub">de '+rooms.length+' quartos</div></div>'+
+    '<div class="stat-card red"><div class="stat-label">Quartos Ocupados</div><div class="stat-value">'+occupied+'</div><div class="stat-sub">'+(rooms.length?Math.round(occupied/rooms.length*100):0)+'% de ocupa&ccedil;&atilde;o</div></div>'+
+    '<div class="stat-card yellow"><div class="stat-label">Reservados</div><div class="stat-value">'+reserved+'</div><div class="stat-sub">Aguardando check-in</div></div>'+
+    '<div class="stat-card purple"><div class="stat-label">H&oacute;spedes Ativos</div><div class="stat-value">'+guests.length+'</div><div class="stat-sub">'+coToday+' checkout(s) hoje</div></div>'+
+    '<div class="stat-card blue"><div class="stat-label">Receita Total</div><div class="stat-value">'+fmtMoney(roomRev+storeRev)+'</div><div class="stat-sub">Hospedagem + Conveni&ecirc;ncia</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Conveni&ecirc;ncia</div><div class="stat-value">'+fmtMoney(storeRev)+'</div><div class="stat-sub">'+orders.length+' pedido(s)</div></div>';
+
+  var acts=load(KEYS.activity)||[];
+  var actEl=document.getElementById('activity-list');
+  if(!acts.length){actEl.innerHTML='<div class="empty-state" style="padding:20px;"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">Nenhuma atividade</div></div>';}
+  else{actEl.innerHTML=acts.slice(0,12).map(function(a){return'<div class="activity-item"><div class="activity-dot dot-'+a.type+'"></div><div class="activity-text">'+a.text+'</div><div class="activity-time">'+fmtDT(a.time)+'</div></div>';}).join('');}
+
+  var tot=rooms.length||1;
+  document.getElementById('room-status-chart').innerHTML=
+    [{l:'Dispon&iacute;vel',c:available,col:'var(--green)'},{l:'Ocupado',c:occupied,col:'var(--red)'},{l:'Reservado',c:reserved,col:'var(--yellow)'},{l:'Manuten&ccedil;&atilde;o',c:maintenance,col:'var(--purple)'}]
+    .map(function(x){return'<div class="bar-item"><div class="bar-label">'+x.l+'</div><div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(x.c/tot*100)+'%;background:'+x.col+';"></div></div><div class="bar-val">'+x.c+' ('+Math.round(x.c/tot*100)+'%)</div></div>';}).join('');
+
+  var cotodayGuests=guests.filter(function(g){return g.checkoutDate===td;});
+  var cotEl=document.getElementById('todays-checkouts');
+  if(!cotodayGuests.length){cotEl.innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:8px 0;">Nenhum checkout previsto para hoje</div>';}
+  else{cotEl.innerHTML=cotodayGuests.map(function(g){var r=rooms.find(function(r){return r.id===g.roomId;});return'<div class="activity-item" style="border:1px solid #ef444433;border-radius:8px;margin-bottom:6px;background:#ef444408;"><div class="activity-dot dot-red"></div><div><div style="font-size:13px;color:var(--text-strong);">'+g.name+'</div><div style="font-size:11px;color:var(--text-dim);">Quarto '+(r?r.number:'?')+' &mdash; '+(r?typeLabel(r.type):'')+'</div></div><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="openCheckout(''+g.id+'')">Checkout</button></div>';}).join('');}
+}
+
+var roomFilter='todos';
+function renderRooms(){
+  var rooms=load(KEYS.rooms)||[];
+  var guests=load(KEYS.guests)||[];
+  var grid=document.getElementById('room-grid');
+  var filtered=rooms.filter(function(r){
+    if(roomFilter==='todos')return true;
+    if(['disponivel','ocupado','reservado','manutencao'].indexOf(roomFilter)>=0)return r.status===roomFilter;
+    return r.type===roomFilter;
+  });
+  if(!filtered.length){grid.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128719;</div><div class="empty-state-text">Nenhum quarto encontrado</div></div>';return;}
+  grid.innerHTML=filtered.map(function(r){
+    var g=r.currentGuest?guests.find(function(gu){return gu.id===r.currentGuest;}):null;
+    var badges={disponivel:'status-disponivel',ocupado:'status-ocupado',reservado:'status-reservado',manutencao:'status-manutencao'};
+    return'<div class="room-card" onclick="openRoomModal('+r.id+')">'+
+      '<div class="room-price">'+fmtMoney(r.price)+'/di&aacute;ria</div>'+
+      '<div class="room-number">'+r.number+'</div>'+
+      '<div class="room-type-label">'+typeLabel(r.type)+' &middot; '+r.floor+'&ordm; andar</div>'+
+      '<div><span class="room-status '+badges[r.status]+'">'+statusLabel(r.status)+'</span></div>'+
+      (g?'<div class="room-guest">&#128100; '+g.name+'</div>':'')+
+      '</div>';
+  }).join('');
+}
+
+function filterRooms(evt,f){
+  roomFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  evt.target.classList.add('active');
+  renderRooms();
+}
+
+function openRoomModal(roomId){
+  var rooms=load(KEYS.rooms)||[];
+  var guests=load(KEYS.guests)||[];
+  var r=rooms.find(function(x){return x.id===roomId;});if(!r)return;
+  var g=r.currentGuest?guests.find(function(gu){return gu.id===r.currentGuest;}):null;
+  document.getElementById('modal-room-title').textContent='Quarto '+r.number+' — '+typeLabel(r.type);
+  var gs='';
+  if(g){
+    var nights=diffDays(g.checkinDate,g.checkoutDate);
+    var rc=nights*r.price;
+    gs='<div style="margin-bottom:14px;"><div class="category-title">&#128100; H&oacute;spede Atual</div>'+
+      '<div class="room-detail-grid">'+
+      '<div class="detail-item"><div class="detail-item-label">Nome</div><div class="detail-item-value">'+g.name+'</div></div>'+
+      '<div class="detail-item"><div class="detail-item-label">CPF</div><div class="detail-item-value">'+(g.cpf||'&mdash;')+'</div></div>'+
+      '<div class="detail-item"><div class="detail-item-label">Telefone</div><div class="detail-item-value">'+(g.phone||'&mdash;')+'</div></div>'+
+      '<div class="detail-item"><div class="detail-item-label">Email</div><div class="detail-item-value">'+(g.email||'&mdash;')+'</div></div>'+
+      '<div class="detail-item"><div class="detail-item-label">Check-in</div><div class="detail-item-value">'+fmtDate(g.checkinDate)+'</div></div>'+
+      '<div class="detail-item"><div class="detail-item-label">Check-out Previsto</div><div class="detail-item-value">'+fmtDate(g.checkoutDate)+'</div></div>'+
+      '<div class="detail-item"><div class="detail-item-label">Di&aacute;rias</div><div class="detail-item-value">'+nights+' noite(s)</div></div>'+
+      '<div class="detail-item"><div class="detail-item-label">Hospedagem</div><div class="detail-item-value" style="color:var(--accent);">'+fmtMoney(rc)+'</div></div>'+
+      '</div>'+
+      '<div class="btn-group" style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="openCheckout(''+g.id+'');closeModal('modal-room');">&#128682; Fazer Check-out</button></div>'+
+      '</div>';
+  }
+  var ams=r.amenities&&r.amenities.length?r.amenities.map(function(a){return'<span class="badge badge-blue" style="margin:2px;">'+a+'</span>';}).join(''):'<span style="color:var(--text-dim);">&mdash;</span>';
+  document.getElementById('modal-room-content').innerHTML=
+    '<div class="room-detail-grid">'+
+    '<div class="detail-item"><div class="detail-item-label">N&uacute;mero</div><div class="detail-item-value">'+r.number+'</div></div>'+
+    '<div class="detail-item"><div class="detail-item-label">Andar</div><div class="detail-item-value">'+r.floor+'&ordm;</div></div>'+
+    '<div class="detail-item"><div class="detail-item-label">Tipo</div><div class="detail-item-value">'+typeLabel(r.type)+'</div></div>'+
+    '<div class="detail-item"><div class="detail-item-label">Status</div><div class="detail-item-value"><span class="room-status status-'+r.status+'">'+statusLabel(r.status)+'</span></div></div>'+
+    '<div class="detail-item" style="grid-column:1/-1;"><div class="detail-item-label">Pre&ccedil;o por Di&aacute;ria</div><div class="detail-item-value" style="color:var(--accent);">'+fmtMoney(r.price)+'</div></div>'+
+    '</div>'+
+    '<div style="margin-bottom:14px;"><div class="category-title">&#127968; Comodidades</div><div style="margin-top:6px;">'+ams+'</div></div>'+
+    gs+
+    '<div class="btn-group">'+
+    (r.status==='disponivel'?'<button class="btn btn-success btn-sm" onclick="openCheckinForRoom('+r.id+');closeModal('modal-room');">&#9989; Check-in</button>':'')+
+    (r.status==='disponivel'?'<button class="btn btn-warning btn-sm" onclick="setRoomStatus('+r.id+','manutencao')">&#128295; Manuten&ccedil;&atilde;o</button>':'')+
+    (r.status==='manutencao'?'<button class="btn btn-success btn-sm" onclick="setRoomStatus('+r.id+','disponivel')">&#9989; Disponibilizar</button>':'')+
+    '<button class="btn btn-danger btn-sm" onclick="removeRoom('+r.id+')">&#128465; Remover</button>'+
+    '<button class="btn btn-ghost btn-sm" onclick="closeModal('modal-room')">Fechar</button>'+
+    '</div>';
+  document.getElementById('modal-room').style.display='flex';
+}
+
+function setRoomStatus(roomId,status){
+  var rooms=load(KEYS.rooms)||[];
+  var r=rooms.find(function(x){return x.id===roomId;});if(!r)return;
+  r.status=status;save(KEYS.rooms,rooms);
+  addActivity('Quarto '+r.number+' → '+statusLabel(status),'yellow');
+  closeModal('modal-room');renderRooms();
+  showToast('Quarto '+r.number+' atualizado.');
+}
+
+function removeRoom(roomId){
+  if(!confirm('Tem certeza que deseja remover este quarto?'))return;
+  var rooms=load(KEYS.rooms)||[];
+  var idx=rooms.findIndex(function(r){return r.id===roomId;});if(idx<0)return;
+  var r=rooms[idx];
+  if(r.status==='ocupado'){showToast('Não é possível remover quarto ocupado!','error');return;}
+  rooms.splice(idx,1);save(KEYS.rooms,rooms);
+  closeModal('modal-room');renderRooms();
+  showToast('Quarto '+r.number+' removido.');
+}
+
+function openAddRoomModal(){
+  ['add-room-number','add-room-amenities'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('add-room-floor').value=1;
+  document.getElementById('add-room-type').value='';
+  document.getElementById('add-room-price').value='';
+  document.getElementById('add-room-status').value='disponivel';
+  document.getElementById('modal-add-room').style.display='flex';
+}
+
+function updateRoomPrice(){
+  var t=document.getElementById('add-room-type').value;
+  var d={solteiro:89.90,casal:149.90,triplo:199.90};
+  if(d[t])document.getElementById('add-room-price').value=d[t];
+}
+
+function submitAddRoom(e){
+  e.preventDefault();
+  var rooms=load(KEYS.rooms)||[];
+  var number=document.getElementById('add-room-number').value.trim();
+  if(rooms.find(function(r){return r.number===number;})){showToast('Número de quarto já existe!','error');return;}
+  var am=document.getElementById('add-room-amenities').value;
+  var amenities=am?am.split(',').map(function(a){return a.trim();}).filter(Boolean):[];
+  var nr={id:Date.now(),number:number,floor:parseInt(document.getElementById('add-room-floor').value)||1,type:document.getElementById('add-room-type').value,status:document.getElementById('add-room-status').value,price:parseFloat(document.getElementById('add-room-price').value),amenities:amenities,currentGuest:null};
+  rooms.push(nr);save(KEYS.rooms,rooms);
+  addActivity('Quarto '+number+' ('+typeLabel(nr.type)+') adicionado','blue');
+  closeModal('modal-add-room');renderRooms();
+  showToast('Quarto '+number+' adicionado!');
+}
+
+function renderGuests(){
+  var guests=load(KEYS.guests)||[];
+  var rooms=load(KEYS.rooms)||[];
+  var q=(document.getElementById('guest-search')?document.getElementById('guest-search').value:'').toLowerCase();
+  var filtered=guests.filter(function(g){
+    var r=rooms.find(function(r){return r.id===g.roomId;});
+    return g.name.toLowerCase().indexOf(q)>=0||(g.cpf||'').indexOf(q)>=0||String(r?r.number:'').indexOf(q)>=0;
+  });
+  var tbody=document.getElementById('guests-tbody');
+  var empty=document.getElementById('guests-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  var td=today();
+  tbody.innerHTML=filtered.map(function(g){
+    var r=rooms.find(function(r){return r.id===g.roomId;});
+    var nights=diffDays(g.checkinDate,g.checkoutDate);
+    var rc=nights*(r?r.price:0);
+    var cot=g.checkoutDate===td;
+    return'<tr style="'+(cot?'background:#ef444411;':'')+'">'+
+      '<td><div class="td-strong">'+g.name+'</div><div style="font-size:11px;color:var(--text-dim);">'+(g.cpf||'')+' '+(g.phone?'&middot; '+g.phone:'')+'</div></td>'+
+      '<td class="td-strong">'+(r?r.number:'?')+'</td>'+
+      '<td>'+(r?typeLabel(r.type):'&mdash;')+'</td>'+
+      '<td>'+fmtDate(g.checkinDate)+'</td>'+
+      '<td>'+(cot?'<span style="color:var(--red);font-weight:600;">'+fmtDate(g.checkoutDate)+' &#9888;</span>':fmtDate(g.checkoutDate))+'</td>'+
+      '<td>'+nights+'d</td>'+
+      '<td style="color:var(--accent);font-weight:600;">'+fmtMoney(rc)+'</td>'+
+      '<td><div style="display:flex;gap:4px;flex-wrap:wrap;">'+
+        '<button class="btn btn-danger btn-sm" onclick="openCheckout(''+g.id+'')">&#128682; Checkout</button>'+
+        '<button class="btn btn-ghost btn-sm" onclick="openCheckout(''+g.id+'')">&#128203; Ver Conta</button>'+
+      '</div></td></tr>';
+  }).join('');
+}
+
+function openCheckinModal(){
+  ['ci-name','ci-cpf','ci-phone','ci-email','ci-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('ci-checkin').value=today();
+  document.getElementById('ci-checkout').value='';
+  document.getElementById('ci-total-preview').style.display='none';
+  var rooms=load(KEYS.rooms)||[];
+  var avail=rooms.filter(function(r){return r.status==='disponivel';});
+  var sel=document.getElementById('ci-room');
+  sel.innerHTML='<option value="">&mdash; Selecione o quarto dispon&iacute;vel &mdash;</option>'+
+    avail.map(function(r){return'<option value="'+r.id+'">'+r.number+' &mdash; '+typeLabel(r.type)+' ('+fmtMoney(r.price)+'/di&aacute;ria)</option>';}).join('');
+  document.getElementById('modal-checkin').style.display='flex';
+}
+
+function openCheckinForRoom(roomId){openCheckinModal();document.getElementById('ci-room').value=roomId;updateCheckinTotal();}
+
+function updateCheckinTotal(){
+  var roomId=parseInt(document.getElementById('ci-room').value);
+  var checkin=document.getElementById('ci-checkin').value;
+  var checkout=document.getElementById('ci-checkout').value;
+  var prev=document.getElementById('ci-total-preview');
+  if(!roomId||!checkin||!checkout||checkout<=checkin){prev.style.display='none';return;}
+  var rooms=load(KEYS.rooms)||[];
+  var r=rooms.find(function(x){return x.id===roomId;});if(!r){prev.style.display='none';return;}
+  var nights=diffDays(checkin,checkout);
+  document.getElementById('ci-room-label').textContent='Quarto '+r.number+' — '+typeLabel(r.type);
+  document.getElementById('ci-nights').textContent=nights+' noite(s) × '+fmtMoney(r.price);
+  document.getElementById('ci-total').textContent=fmtMoney(nights*r.price);
+  prev.style.display='block';
+}
+
+function submitCheckin(e){
+  e.preventDefault();
+  var roomId=parseInt(document.getElementById('ci-room').value);
+  var checkin=document.getElementById('ci-checkin').value;
+  var checkout=document.getElementById('ci-checkout').value;
+  if(checkout<=checkin){showToast('Data de checkout deve ser após o check-in!','error');return;}
+  var rooms=load(KEYS.rooms)||[];
+  var r=rooms.find(function(x){return x.id===roomId;});
+  if(!r||r.status!=='disponivel'){showToast('Quarto não disponível!','error');return;}
+  var guests=load(KEYS.guests)||[];
+  var guest={id:uid(),name:document.getElementById('ci-name').value.trim(),cpf:document.getElementById('ci-cpf').value.trim(),phone:document.getElementById('ci-phone').value.trim(),email:document.getElementById('ci-email').value.trim(),notes:document.getElementById('ci-notes').value.trim(),roomId:roomId,checkinDate:checkin,checkoutDate:checkout,checkinTime:new Date().toISOString()};
+  guests.push(guest);save(KEYS.guests,guests);
+  r.status='ocupado';r.currentGuest=guest.id;save(KEYS.rooms,rooms);
+  addActivity('Check-in: '+guest.name+' → Quarto '+r.number,'green');
+  closeModal('modal-checkin');renderGuests();renderRooms();
+  showToast('Check-in de '+guest.name+' realizado! Quarto '+r.number+'.');
+}
+
+function openCheckout(guestId){
+  var guests=load(KEYS.guests)||[];
+  var rooms=load(KEYS.rooms)||[];
+  var orders=load(KEYS.orders)||[];
+  var g=guests.find(function(x){return x.id===guestId;});if(!g)return;
+  var r=rooms.find(function(x){return x.id===g.roomId;});
+  var nights=diffDays(g.checkinDate,g.checkoutDate);
+  var rc=nights*(r?r.price:0);
+  var go=orders.filter(function(o){return o.guestId===guestId;});
+  var sc=go.reduce(function(s,o){return s+o.total;},0);
+  var oi=go.flatMap(function(o){return o.items;}).reduce(function(acc,item){
+    var k=item.name;if(!acc[k])acc[k]={name:item.name,qty:0,total:0};
+    acc[k].qty+=(item.quantity||item.qty||1);acc[k].total+=item.price*(item.quantity||item.qty||1);return acc;
+  },{});
+  document.getElementById('modal-checkout-content').innerHTML=
+    '<div class="room-detail-grid" style="margin-bottom:14px;">'+
+    '<div class="detail-item"><div class="detail-item-label">H&oacute;spede</div><div class="detail-item-value">'+g.name+'</div></div>'+
+    '<div class="detail-item"><div class="detail-item-label">Quarto</div><div class="detail-item-value">'+(r?r.number:'?')+' &mdash; '+(r?typeLabel(r.type):'')+'</div></div>'+
+    '<div class="detail-item"><div class="detail-item-label">Check-in</div><div class="detail-item-value">'+fmtDate(g.checkinDate)+'</div></div>'+
+    '<div class="detail-item"><div class="detail-item-label">Check-out</div><div class="detail-item-value">'+fmtDate(g.checkoutDate)+'</div></div>'+
+    '</div>'+
+    '<div style="background:var(--bg-input);border-radius:8px;padding:12px;margin-bottom:14px;">'+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span style="color:var(--text-dim);">&#128719; Hospedagem ('+nights+'d &times; '+fmtMoney(r?r.price:0)+'):</span><span style="color:var(--text);font-weight:600;">'+fmtMoney(rc)+'</span></div>'+
+    Object.values(oi).map(function(i){return'<div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;"><span style="color:var(--text-dim);">&#128722; '+i.name+' &times; '+i.qty+':</span><span style="color:var(--text);">'+fmtMoney(i.total)+'</span></div>';}).join('')+
+    (sc>0?'<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;border-top:1px solid var(--border);padding-top:6px;"><span style="color:var(--text-dim);">&#128722; Conveni&ecirc;ncia total:</span><span style="color:var(--text);font-weight:600;">'+fmtMoney(sc)+'</span></div>':'')+
+    '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;"><span style="color:var(--text-dim);">&#128176; TOTAL:</span><span style="color:var(--accent);">'+fmtMoney(rc+sc)+'</span></div>'+
+    '</div>'+
+    '<div class="btn-group"><button class="btn btn-danger" onclick="confirmCheckout(''+guestId+'')">&#128682; Confirmar Check-out</button><button class="btn btn-ghost" onclick="closeModal('modal-checkout')">Cancelar</button></div>';
+  document.getElementById('modal-checkout').style.display='flex';
+}
+
+function confirmCheckout(guestId){
+  var guests=load(KEYS.guests)||[];
+  var rooms=load(KEYS.rooms)||[];
+  var orders=load(KEYS.orders)||[];
+  var gi=guests.findIndex(function(g){return g.id===guestId;});if(gi<0)return;
+  var g=guests[gi];
+  var r=rooms.find(function(x){return x.id===g.roomId;});
+  var nights=diffDays(g.checkinDate,g.checkoutDate);
+  var rc=nights*(r?r.price:0);
+  var sc=orders.filter(function(o){return o.guestId===guestId;}).reduce(function(s,o){return s+o.total;},0);
+  var history=load(KEYS.history)||[];
+  history.push({id:uid(),guestName:g.name,guestCpf:g.cpf,roomNumber:r?r.number:'?',roomType:r?r.type:'?',checkinDate:g.checkinDate,checkoutDate:g.checkoutDate,nights:nights,roomTotal:rc,storeTotal:sc,total:rc+sc,checkoutTime:new Date().toISOString()});
+  save(KEYS.history,history);
+  if(r){r.status='disponivel';r.currentGuest=null;save(KEYS.rooms,rooms);}
+  guests.splice(gi,1);save(KEYS.guests,guests);
+  addActivity('Check-out: '+g.name+' ← Quarto '+(r?r.number:'?')+' ('+fmtMoney(rc+sc)+')','red');
+  closeModal('modal-checkout');renderGuests();renderRooms();
+  showToast('Check-out de '+g.name+' realizado!');
+}
+
+var cart=[];
+function renderStore(){
+  var products=load(KEYS.products)||[];
+  var cats=['bebidas','bolachas','salgados','higiene','outros'];
+  document.getElementById('store-catalog').innerHTML=cats.map(function(cat){
+    var cp=products.filter(function(p){return p.category===cat;});
+    if(!cp.length)return'';
+    return'<div class="category-title">'+catLabel(cat)+'</div>'+
+      '<div class="product-grid">'+
+      cp.map(function(p){return'<div class="product-card'+(p.stock<=0?' out-of-stock':'')+'" onclick="'+(p.stock>0?'addToCart(''+p.id+'')':'')+'">'+'<div class="product-emoji">'+(p.emoji||'&#128230;')+'</div><div class="product-name">'+p.name+'</div><div class="product-price">'+fmtMoney(p.price)+'</div><div class="product-stock">'+(p.stock>0?p.stock+' em estoque':'&#10060; Sem estoque')+'</div></div>';}).join('')+
+      '</div>';
+  }).join('');
+}
+
+function renderCartRoomSelect(){
+  var guests=load(KEYS.guests)||[];
+  var rooms=load(KEYS.rooms)||[];
+  var sel=document.getElementById('cart-room-select');
+  sel.innerHTML='<option value="">&mdash; Selecione o quarto &mdash;</option>'+
+    guests.map(function(g){var r=rooms.find(function(r){return r.id===g.roomId;});return'<option value="'+g.id+'">Quarto '+(r?r.number:'?')+' &mdash; '+g.name+'</option>';}).join('');
+}
+
+function addToCart(pid){
+  var products=load(KEYS.products)||[];
+  var p=products.find(function(x){return x.id===pid;});if(!p||p.stock<=0)return;
+  var ex=cart.find(function(c){return c.id===pid;});
+  if(ex){if(ex.qty>=p.stock){showToast('Estoque insuficiente!','error');return;}ex.qty++;}
+  else cart.push({id:pid,name:p.name,price:p.price,qty:1,emoji:p.emoji||''});
+  renderCart();showToast(p.name+' adicionado ao carrinho','info');
+}
+
+function renderCart(){
+  var el=document.getElementById('cart-items');
+  var tr=document.getElementById('cart-total-row');
+  document.getElementById('cart-count').textContent=cart.reduce(function(s,c){return s+c.qty;},0);
+  if(!cart.length){el.innerHTML='<div class="cart-empty">Carrinho vazio</div>';tr.style.display='none';return;}
+  var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
+  el.innerHTML=cart.map(function(c){return'<div class="cart-item"><div class="cart-item-name">'+(c.emoji||'')+' '+c.name+'</div><div class="cart-item-qty"><button class="qty-btn" onclick="changeCartQty(''+c.id+'',-1)">&minus;</button><span style="min-width:20px;text-align:center;">'+c.qty+'</span><button class="qty-btn" onclick="changeCartQty(''+c.id+'',1)">+</button></div><div class="cart-item-total">'+fmtMoney(c.price*c.qty)+'</div></div>';}).join('');
+  document.getElementById('cart-total-value').textContent=fmtMoney(total);
+  tr.style.display='flex';
+}
+
+function changeCartQty(pid,delta){
+  var idx=cart.findIndex(function(c){return c.id===pid;});if(idx<0)return;
+  cart[idx].qty+=delta;if(cart[idx].qty<=0)cart.splice(idx,1);
+  renderCart();
+}
+function clearCart(){cart=[];renderCart();}
+
+function checkoutCart(){
+  if(!cart.length){showToast('Carrinho vazio!','error');return;}
+  var guestId=document.getElementById('cart-room-select').value;
+  if(!guestId){showToast('Selecione o quarto/hóspede!','error');return;}
+  var products=load(KEYS.products)||[];
+  var guests=load(KEYS.guests)||[];
+  var rooms=load(KEYS.rooms)||[];
+  var g=guests.find(function(x){return x.id===guestId;});
+  var r=g?rooms.find(function(x){return x.id===g.roomId;}):null;
+  for(var i=0;i<cart.length;i++){var p=products.find(function(x){return x.id===cart[i].id;});if(!p||p.stock<cart[i].qty){showToast('Estoque insuficiente: '+cart[i].name,'error');return;}}
+  cart.forEach(function(c){var p=products.find(function(x){return x.id===c.id;});if(p)p.stock-=c.qty;});
+  save(KEYS.products,products);
+  var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
+  var orders=load(KEYS.orders)||[];
+  orders.push({id:uid(),guestId:guestId,guestName:g?g.name:'?',roomNumber:r?r.number:'?',items:cart.map(function(c){return Object.assign({},c,{quantity:c.qty});}),total:total,timestamp:new Date().toISOString()});
+  save(KEYS.orders,orders);
+  addActivity('Pedido conveniência: Quarto '+(r?r.number:'?')+' — '+fmtMoney(total),'yellow');
+  cart=[];renderCart();renderStore();
+  showToast('Pedido de '+fmtMoney(total)+' registrado!');
+}
+
+function openManageProductsModal(){renderProductsTable();document.getElementById('modal-products').style.display='flex';}
+
+function renderProductsTable(){
+  var products=load(KEYS.products)||[];
+  document.getElementById('products-tbody').innerHTML=products.map(function(p){
+    return'<tr><td><span style="font-size:16px;">'+(p.emoji||'&#128230;')+'</span> '+p.name+'</td><td>'+catLabel(p.category)+'</td><td style="color:var(--accent);font-weight:600;">'+fmtMoney(p.price)+'</td>'+
+    '<td><div style="display:flex;align-items:center;gap:6px;"><button class="qty-btn" onclick="adjustStock(''+p.id+'',-1)">&minus;</button><span>'+p.stock+'</span><button class="qty-btn" onclick="adjustStock(''+p.id+'',10)">+10</button></div></td>'+
+    '<td><button class="btn btn-danger btn-sm" onclick="removeProduct(''+p.id+'')">&#128465;</button></td></tr>';
+  }).join('');
+}
+
+function adjustStock(pid,delta){
+  var products=load(KEYS.products)||[];
+  var p=products.find(function(x){return x.id===pid;});if(!p)return;
+  p.stock=Math.max(0,p.stock+delta);save(KEYS.products,products);
+  renderProductsTable();renderStore();
+}
+
+function removeProduct(pid){
+  if(!confirm('Remover produto?'))return;
+  var products=load(KEYS.products)||[];
+  var idx=products.findIndex(function(p){return p.id===pid;});
+  if(idx>=0)products.splice(idx,1);save(KEYS.products,products);
+  renderProductsTable();renderStore();
+}
+
+function openAddProductForm(){
+  var f=document.getElementById('add-product-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+  ['prod-name','prod-emoji','prod-price','prod-stock'].forEach(function(id){document.getElementById(id).value='';});
+}
+
+function submitAddProduct(){
+  var name=document.getElementById('prod-name').value.trim();
+  if(!name){showToast('Nome obrigatório!','error');return;}
+  var price=parseFloat(document.getElementById('prod-price').value);
+  var stock=parseInt(document.getElementById('prod-stock').value)||0;
+  if(!price||price<=0){showToast('Preço inválido!','error');return;}
+  var products=load(KEYS.products)||[];
+  products.push({id:uid(),name:name,emoji:document.getElementById('prod-emoji').value.trim()||'&#128230;',category:document.getElementById('prod-category').value,price:price,stock:stock});
+  save(KEYS.products,products);
+  document.getElementById('add-product-form').style.display='none';
+  renderProductsTable();renderStore();showToast('Produto "'+name+'" adicionado!');
+}
+
+function openOrderHistoryModal(){
+  var orders=load(KEYS.orders)||[];
+  document.getElementById('orders-tbody').innerHTML=!orders.length?
+    '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);">Nenhum pedido registrado</td></tr>':
+    orders.slice().reverse().map(function(o){return'<tr><td>'+fmtDT(o.timestamp)+'</td><td class="td-strong">'+o.roomNumber+'</td><td>'+o.guestName+'</td><td style="font-size:12px;">'+o.items.map(function(i){return i.name+' &times;'+(i.quantity||i.qty||1);}).join(', ')+'</td><td style="color:var(--accent);font-weight:600;">'+fmtMoney(o.total)+'</td></tr>';}).join('');
+  document.getElementById('modal-orders').style.display='flex';
+}
+
+function renderReports(){
+  var rooms=load(KEYS.rooms)||[];
+  var history=load(KEYS.history)||[];
+  var orders=load(KEYS.orders)||[];
+  var guests=load(KEYS.guests)||[];
+  var products=load(KEYS.products)||[];
+  var trr=history.reduce(function(s,h){return s+h.roomTotal;},0);
+  var tsr=orders.reduce(function(s,o){return s+o.total;},0);
+  var avg=history.length?history.reduce(function(s,h){return s+h.nights;},0)/history.length:0;
+  document.getElementById('report-stats').innerHTML=
+    '<div class="stat-card blue"><div class="stat-label">Receita de Hospedagem</div><div class="stat-value">'+fmtMoney(trr)+'</div><div class="stat-sub">'+history.length+' estadias conclu&iacute;das</div></div>'+
+    '<div class="stat-card yellow"><div class="stat-label">Receita Conveni&ecirc;ncia</div><div class="stat-value">'+fmtMoney(tsr)+'</div><div class="stat-sub">'+orders.length+' pedidos</div></div>'+
+    '<div class="stat-card green"><div class="stat-label">Receita Total</div><div class="stat-value">'+fmtMoney(trr+tsr)+'</div></div>'+
+    '<div class="stat-card purple"><div class="stat-label">Total de H&oacute;spedes</div><div class="stat-value">'+(history.length+guests.length)+'</div><div class="stat-sub">Hist&oacute;rico completo</div></div>'+
+    '<div class="stat-card"><div class="stat-label">M&eacute;dia de Estadia</div><div class="stat-value">'+avg.toFixed(1)+'d</div><div class="stat-sub">noites por h&oacute;spede</div></div>';
+
+  var types=['solteiro','casal','triplo'];
+  var tcols=['var(--blue)','var(--green)','var(--purple)'];
+  var tocc=types.map(function(t){return{l:typeLabel(t),c:rooms.filter(function(r){return r.type===t&&r.status==='ocupado';}).length,tot:rooms.filter(function(r){return r.type===t;}).length};});
+  document.getElementById('report-occupancy-type').innerHTML=tocc.map(function(t,i){return'<div class="bar-item"><div class="bar-label">'+t.l+'</div><div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(t.tot?t.c/t.tot*100:0)+'%;background:'+tcols[i]+';"></div></div><div class="bar-val">'+t.c+'/'+t.tot+'</div></div>';}).join('');
+
+  var cats=['bebidas','bolachas','salgados','higiene','outros'];
+  var ccols=['var(--blue)','var(--yellow)','var(--orange)','var(--green)','var(--purple)'];
+  var cnames=['Bebidas','Bolachas','Salgados','Higiene','Outros'];
+  var cs=cats.map(function(cat){
+    var total=orders.flatMap(function(o){return o.items;}).filter(function(i){var p=products.find(function(p){return p.name===i.name;});return p&&p.category===cat;}).reduce(function(s,i){return s+i.price*(i.quantity||i.qty||1);},0);
+    return{l:cat,total:total};
+  });
+  var maxC=Math.max(1,Math.max.apply(null,cs.map(function(c){return c.total;})));
+  document.getElementById('report-store-category').innerHTML=cs.map(function(c,i){return'<div class="bar-item"><div class="bar-label" style="font-size:10px;">'+cnames[i]+'</div><div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(c.total/maxC*100)+'%;background:'+ccols[i]+';"></div></div><div class="bar-val">'+fmtMoney(c.total)+'</div></div>';}).join('');
+
+  var trevs=types.map(function(t){return{l:typeLabel(t),total:history.filter(function(h){return h.roomType===t;}).reduce(function(s,h){return s+h.roomTotal;},0)};});
+  var maxR=Math.max(1,Math.max.apply(null,trevs.map(function(r){return r.total;})));
+  document.getElementById('report-revenue-type').innerHTML=trevs.map(function(t,i){return'<div class="bar-item"><div class="bar-label">'+t.l+'</div><div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(t.total/maxR*100)+'%;background:'+tcols[i]+';"></div></div><div class="bar-val">'+fmtMoney(t.total)+'</div></div>';}).join('');
+
+  var allItems=orders.flatMap(function(o){return o.items;});
+  var ps={};
+  allItems.forEach(function(i){var k=i.name;if(!ps[k])ps[k]=0;ps[k]+=i.price*(i.quantity||i.qty||1);});
+  var top=Object.entries(ps).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+  var maxP=Math.max(1,Math.max.apply(null,top.map(function(p){return p[1];})));
+  document.getElementById('report-top-products').innerHTML=!top.length?
+    '<div style="color:var(--text-dim);font-size:12px;text-align:center;padding:20px;">Nenhuma venda registrada</div>':
+    top.map(function(entry){return'<div class="bar-item"><div class="bar-label" style="font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+entry[0]+'</div><div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(entry[1]/maxP*100)+'%;background:var(--accent);"></div></div><div class="bar-val">'+fmtMoney(entry[1])+'</div></div>';}).join('');
+
+  document.getElementById('history-tbody').innerHTML=!history.length?
+    '<tr><td colspan="9" style="text-align:center;color:var(--text-dim);">Nenhuma estadia conclu&iacute;da</td></tr>':
+    history.slice().reverse().map(function(h){return'<tr><td class="td-strong">'+h.guestName+'</td><td>'+h.roomNumber+'</td><td>'+typeLabel(h.roomType)+'</td><td>'+fmtDate(h.checkinDate)+'</td><td>'+fmtDate(h.checkoutDate)+'</td><td>'+h.nights+'d</td><td style="color:var(--blue);">'+fmtMoney(h.roomTotal)+'</td><td style="color:var(--yellow);">'+fmtMoney(h.storeTotal)+'</td><td style="color:var(--accent);font-weight:700;">'+fmtMoney(h.total)+'</td></tr>';}).join('');
+}
+
+function closeModal(id){document.getElementById(id).style.display='none';}
+function closeModalOnOverlay(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+
+function maskCPF(el){
+  var v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+  else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d+)/,'$1.$2.$3');
+  else if(v.length>3)v=v.replace(/(\d{3})(\d+)/,'$1.$2');
+  el.value=v;
+}
+function maskPhone(el){
+  var v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  else if(v.length>6)v=v.replace(/(\d{2})(\d{4,5})(\d+)/,'($1) $2-$3');
+  else if(v.length>2)v=v.replace(/(\d{2})(\d+)/,'($1) $2');
+  el.value=v;
+}
+
+initData();
+updateClock();
+setInterval(updateClock,1000);
+renderDashboard();
+</script>
+</body>
+</html>
