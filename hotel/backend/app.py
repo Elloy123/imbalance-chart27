@@ -33,7 +33,7 @@ Endpoints:
 import json
 import os
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from math import ceil
 
 from flask import Flask, abort, jsonify, request
@@ -222,7 +222,7 @@ def checkin():
         "roomId": str(data["roomId"]),
         "checkinDate": data["checkinDate"],
         "checkoutDate": data["checkoutDate"],
-        "checkinTime": datetime.utcnow().isoformat(),
+        "checkinTime": datetime.now(timezone.utc).isoformat(),
     }
     guests.append(guest)
     _write("guests", guests)
@@ -261,7 +261,7 @@ def checkout(guest_id):
         "roomTotal": room_cost,
         "storeTotal": store_cost,
         "total": room_cost + store_cost,
-        "checkoutTime": datetime.utcnow().isoformat(),
+        "checkoutTime": datetime.now(timezone.utc).isoformat(),
     }
     history = _read("history")
     history.append(history_entry)
@@ -371,7 +371,7 @@ def create_order():
         "roomNumber": room["number"] if room else "?",
         "items": items,
         "total": total,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     orders = _read("orders")
     orders.append(order)
@@ -440,5 +440,6 @@ def get_reports():
 # Dev server
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
     print("HotelSys Backend — http://localhost:5000")
-    app.run(debug=True, port=5000)
+    app.run(debug=debug, port=5000)

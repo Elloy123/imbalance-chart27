@@ -486,7 +486,7 @@ tr:hover td{background:var(--bg-card);}
 const KEYS={rooms:'hs_rooms',guests:'hs_guests',products:'hs_products',orders:'hs_orders',history:'hs_history',activity:'hs_activity'};
 function load(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
-function uid(){return Math.random().toString(36).substr(2,9)+Date.now().toString(36);}
+function uid(){return Math.random().toString(36).slice(2,11)+Date.now().toString(36);}
 function fmtMoney(v){return'R$ '+Number(v).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 function fmtDate(s){if(!s)return'&mdash;';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function today(){return new Date().toISOString().slice(0,10);}
